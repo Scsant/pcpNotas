@@ -1,0 +1,17 @@
+📍 Fazenda: corrientes
+Estado: MS
+
+🔹 Transportadora: Cargo Polo
+Qtd Notas: 15
+Nota Inicial: 1515
+Nota Final: 1525
+
+-----------------------------
+
+🔹 Transportadora: Garbuio
+Qtd Notas: 10
+Nota Inicial: 1588
+Nota Final: 1599
+
+-----------------------------
+
