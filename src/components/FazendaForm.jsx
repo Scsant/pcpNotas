@@ -4,6 +4,7 @@ import FazendaFormGroup from "./FazendaFormGroup";
 import { salvarRegistro } from "../db/emissorDB";
 import toast from "react-hot-toast";
 import { supabase } from "../supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 
 // Hooks Supabase
@@ -18,7 +19,7 @@ import {useTransportadorasSupabase} from "../hooks/useTransp";
 const FazendaForm = () => {
   const [estado, setEstado] = usePersistentState("estado", "");
   const [fazendas, setFazendas] = usePersistentState("fazendas", []);
-
+  const navigate = useNavigate();
   const { fazendas: fazendasSupabase, loading } = useFazendasSupabase();
   const { transportadoras, loading: loadingTransportadoras } = useTransportadorasSupabase();
 
@@ -131,6 +132,14 @@ const FazendaForm = () => {
       onSubmit={handleSubmit}
       className="max-w-6xl mx-auto space-y-6 mt-10 px-4"
     >
+      
+      {/* Botão de voltar */}
+      <button
+        onClick={() => navigate(-1)}
+        className="mb-4 bg-white text-black px-4 py-2 rounded hover:bg-gray-300 font-semibold shadow"
+      >
+        ⬅ Voltar
+      </button>
     {/* Lista de Fazendas do Supabase */}
     {!loading && fazendasSupabase.length > 0 && (
       <div className="bg-white rounded shadow p-4 text-sm text-gray-800">
@@ -161,6 +170,7 @@ const FazendaForm = () => {
         </ul>
       </div>
     )}
+
 
       {/* Formulários das fazendas em edição */}
       {fazendas.map((fazenda, idx) => (
