@@ -4,7 +4,6 @@ import NotaLinha from "../components/NotaLinha";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
-
 const PainelNotas = () => {
   const [notas, setNotas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,24 +13,22 @@ const PainelNotas = () => {
   const [ordemAscendente, setOrdemAscendente] = useState(false);
   const [perfil, setPerfil] = useState(null);
   const [notasSelecionadas, setNotasSelecionadas] = useState([]);
+  const [stats, setStats] = useState({ vencidasHoje: 0, canceladasMes: 0 });
+
   const navigate = useNavigate();
-  const [stats, setStats] = useState({
-    vencidasHoje: 0,
-    canceladasMes: 0,
-  });
-
-
   const itensPorPagina = 20;
 
   useEffect(() => {
     const p = JSON.parse(localStorage.getItem("perfil"));
     setPerfil(p);
-    carregarEstatisticas();
   }, []);
 
   useEffect(() => {
-    carregarNotas();
-  }, []);
+    if (perfil) {
+      carregarNotas();
+      carregarEstatisticas();
+    }
+  }, [perfil]);
 
   const carregarNotas = async () => {
     setLoading(true);
@@ -41,7 +38,8 @@ const PainelNotas = () => {
       .order("data_envio", { ascending: false });
 
     if (error) {
-      console.error("Erro ao carregar notas:", error);
+      toast.error("Erro ao carregar notas.");
+      console.error(error);
     } else {
       setNotas(data);
     }
@@ -49,26 +47,25 @@ const PainelNotas = () => {
   };
 
   const carregarEstatisticas = async () => {
-  const hoje = new Date().toISOString().slice(0, 10);
-  const primeiroDiaMes = hoje.slice(0, 8) + "01";
+    const hoje = new Date().toISOString().slice(0, 10);
+    const primeiroDiaMes = hoje.slice(0, 8) + "01";
 
-  const { count: vencidasHoje } = await supabase
-    .from("documentos_notas")
-    .select("id", { count: "exact", head: true })
-    .lte("data_envio", hoje)
-    .is("cte", null);
+    const { count: vencidasHoje } = await supabase
+      .from("documentos_notas")
+      .select("id", { count: "exact", head: true })
+      .lte("data_envio", hoje)
+      .is("cte", null);
 
-  const { count: canceladasMes } = await supabase
-    .from("documentos_notas_canceladas")
-    .select("id", { count: "exact", head: true })
-    .gte("data_cancelamento", primeiroDiaMes);
+    const { count: canceladasMes } = await supabase
+      .from("documentos_notas_canceladas")
+      .select("id", { count: "exact", head: true })
+      .gte("data_cancelamento", primeiroDiaMes);
 
-  setStats({
-    vencidasHoje: vencidasHoje || 0,
-    canceladasMes: canceladasMes || 0,
-  });
-};
-
+    setStats({
+      vencidasHoje: vencidasHoje || 0,
+      canceladasMes: canceladasMes || 0,
+    });
+  };
 
   const handleFiltro = (e) => {
     const { name, value } = e.target;
@@ -83,36 +80,33 @@ const PainelNotas = () => {
 
       const filtroNF = filtros.nf === "" || String(nota.numero_nf).includes(filtros.nf);
       const filtroTransp =
-        filtros.transportadora === "" || nota.transportadora_nome === filtros.transportadora;
-      const filtroStatus = filtros.status === "" || nota.status === filtros.status;
+        filtros.transportadora === "" ||
+        nota.transportadora_nome?.toLowerCase().includes(filtros.transportadora.toLowerCase());
+      const filtroStatus =
+        filtros.status === "" || nota.status === filtros.status;
 
       return filtroNF && filtroTransp && filtroStatus;
     });
   };
 
-
   const ordenar = (lista) => {
     return [...lista].sort((a, b) => {
-      const campoA = a[ordenarPor];
-      const campoB = b[ordenarPor];
-
-      if (campoA < campoB) return ordemAscendente ? -1 : 1;
-      if (campoA > campoB) return ordemAscendente ? 1 : -1;
-      return 0;
+      const campoA = a[ordenarPor] || "";
+      const campoB = b[ordenarPor] || "";
+      return ordemAscendente
+        ? campoA.localeCompare(campoB)
+        : campoB.localeCompare(campoA);
     });
   };
 
   const salvarEdicao = async (id, campos) => {
-    const { error } = await supabase
-      .from("documentos_notas")
-      .update(campos)
-      .eq("id", id);
+    const { error } = await supabase.from("documentos_notas").update(campos).eq("id", id);
 
     if (error) {
-      console.error("Erro ao atualizar:", error.message);
-      alert("Erro ao salvar!");
+      toast.error("Erro ao salvar dados.");
+      console.error(error);
     } else {
-      alert("Salvo com sucesso!");
+      toast.success("Salvo com sucesso!");
       carregarNotas();
     }
   };
@@ -139,18 +133,17 @@ const PainelNotas = () => {
   );
 
   return (
-    
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-center">Painel de Notas Fiscais</h1>
+    <div className="p-4 md:p-8">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center text-blue-900">Painel de Notas Fiscais</h1>
 
       {/* Filtros */}
-      <div className="flex gap-4 mb-6 flex-wrap">
+      <div className="flex flex-wrap gap-4 mb-6">
         <input
           type="text"
           name="nf"
           value={filtros.nf}
           onChange={handleFiltro}
-          placeholder="Filtrar por Número NF"
+          placeholder="Número NF"
           className="p-2 border rounded text-black"
         />
         <input
@@ -158,7 +151,7 @@ const PainelNotas = () => {
           name="transportadora"
           value={filtros.transportadora}
           onChange={handleFiltro}
-          placeholder="Filtrar por Transportadora"
+          placeholder="Transportadora"
           className="p-2 border rounded text-black"
         />
         <select
@@ -169,73 +162,65 @@ const PainelNotas = () => {
         >
           <option value="">Todos Status</option>
           <option value="pendente">Pendente</option>
+          <option value="vinculada">Vinculada</option>
+          <option value="em_transito">Em trânsito</option>
           <option value="concluido">Concluído</option>
           <option value="cancelado">Cancelado</option>
         </select>
 
         <button
           onClick={carregarNotas}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          🔄 Atualizar Agora
+          🔄 Atualizar
         </button>
       </div>
 
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 bg-white text-black px-4 py-2 rounded hover:bg-gray-300 font-semibold shadow"
-      >
-        ⬅ Voltar
-      </button>
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex flex-col md:flex-row gap-4 mb-6 items-start">
         <button
           onClick={async () => {
             const { error } = await supabase.rpc("auto_expirar_notas_sem_cte");
             if (error) {
               toast.error("Erro ao rodar verificação.");
-              console.error(error);
             } else {
-              toast.success("Notas vencidas processadas!");
+              toast.success("Verificação concluída!");
               carregarNotas();
               carregarEstatisticas();
             }
           }}
           className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow"
         >
-          🧪 Rodar Verificação Agora
+          🧪 Rodar Verificação
         </button>
 
-        <div className="bg-yellow-100 text-yellow-800 border-l-4 border-yellow-500 p-3 rounded shadow-sm">
-          📆 Notas vencidas até hoje: <strong>{stats.vencidasHoje}</strong>
+        <div className="bg-yellow-100 text-yellow-800 border-l-4 border-yellow-500 p-3 rounded">
+          📆 Vencidas até hoje: <strong>{stats.vencidasHoje}</strong>
         </div>
-
-        <div className="bg-green-100 text-green-800 border-l-4 border-green-500 p-3 rounded shadow-sm">
+        <div className="bg-green-100 text-green-800 border-l-4 border-green-500 p-3 rounded">
           ✅ Canceladas este mês: <strong>{stats.canceladasMes}</strong>
         </div>
       </div>
 
-
-      {/* Tabela */}
-      <div className="overflow-x-auto">
-
-        <table className="min-w-full bg-white shadow rounded">
-          <thead>
-            <tr className="bg-blue-500 text-white">
-              {[ 
-                { label: "Número NF", campo: "numero_nf" },
-                { label: "Nome Arquivo", campo: "nome_arquivo" },
+      {/* Tabela Responsiva */}
+      <div className="overflow-x-auto bg-white rounded shadow mb-4">
+        <table className="min-w-full text-sm text-left">
+          <thead className="bg-blue-500 text-white">
+            <tr>
+              {[
+                { label: "NF", campo: "numero_nf" },
+                { label: "Arquivo", campo: "nome_arquivo" },
                 { label: "Transportadora", campo: "transportadora_nome" },
                 { label: "Fazenda", campo: "fazenda" },
-                { label: "Estado", campo: "estado" },
-                { label: "CTE", campo: "cte" },
+                { label: "UF", campo: "estado" },
+                { label: "CT-e", campo: "cte" },
                 { label: "Placa", campo: "placa" },
                 { label: "Observação", campo: "observacao" },
-                { label: "Data Envio", campo: "data_envio" },
+                { label: "Enviado", campo: "data_envio" },
                 { label: "Status", campo: "status" },
               ].map(({ label, campo }) => (
                 <th
                   key={campo}
-                  className="px-4 py-2 cursor-pointer"
+                  className="px-3 py-2 cursor-pointer"
                   onClick={() => {
                     if (ordenarPor === campo) {
                       setOrdemAscendente(!ordemAscendente);
@@ -248,8 +233,8 @@ const PainelNotas = () => {
                   {label}
                 </th>
               ))}
-              <th className="px-4 py-2">Link</th>
-              <th className="px-4 py-2">Salvar</th>
+              <th className="px-3 py-2">PDF</th>
+              <th className="px-3 py-2">Ação</th>
             </tr>
           </thead>
           <tbody>
@@ -257,7 +242,10 @@ const PainelNotas = () => {
               <NotaLinha
                 key={nota.id}
                 nota={nota}
-                podeEditar={perfil?.role === "admin" || perfil?.transportadora_id === nota.transportadora_id}
+                podeEditar={
+                  perfil?.role === "admin" ||
+                  perfil?.transportadora_id === nota.transportadora_id
+                }
                 salvarEdicao={salvarEdicao}
                 selecionada={notasSelecionadas.includes(nota.id)}
                 toggleSelecionada={toggleSelecionada}
@@ -268,21 +256,23 @@ const PainelNotas = () => {
       </div>
 
       {/* Paginação */}
-      <div className="flex justify-center items-center mt-6 gap-4">
+      <div className="flex justify-center gap-4 mt-4">
         <button
           onClick={() => setPaginaAtual((prev) => Math.max(prev - 1, 1))}
-          className="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400"
+          className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"
           disabled={paginaAtual === 1}
         >
-          ⬅️ Anterior
+          ⬅ Anterior
         </button>
-        <span>{paginaAtual} / {totalPaginas}</span>
+        <span className="font-semibold">
+          Página {paginaAtual} de {totalPaginas}
+        </span>
         <button
           onClick={() => setPaginaAtual((prev) => Math.min(prev + 1, totalPaginas))}
-          className="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400"
+          className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"
           disabled={paginaAtual === totalPaginas}
         >
-          Próxima ➡️
+          Próxima ➡
         </button>
       </div>
     </div>

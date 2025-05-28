@@ -206,102 +206,101 @@ const UploadNotas = () => {
     setNotas(arquivosSelecionados);
   };
 
-  return (
-    <div className="bg-white rounded-xl shadow-lg overflow-auto p-4">
+return (
+  <div className="min-h-screen bg-gradient-to-r from-blue-800 to-green-600 flex flex-col">
+    <GlobalHeader />
 
-       <GlobalHeader />
-          {/* Botão de voltar */}
-      <button
+    <div className="p-4 sm:p-6 md:p-8 flex justify-center flex-1">
+      <div className="w-full max-w-2xl bg-white/10 backdrop-blur-md rounded-xl shadow-xl p-6 sm:p-8 text-white mt-6 mb-12">
+
+        {/* Botão de Voltar */}
+        <button
           onClick={() => navigate(-1)}
-          className="mb-4 bg-white text-black px-4 py-2 rounded hover:bg-gray-300 font-semibold shadow"
-      >
+          className="mb-6 bg-white text-black px-4 py-2 rounded hover:bg-gray-300 font-semibold shadow"
+        >
           ⬅ Voltar
-      </button>
+        </button>
 
+        {/* Título */}
+        <h1 className="text-2xl sm:text-3xl font-bold mb-8 text-center">
+          Upload de Notas Fiscais
+        </h1>
 
-      <div className="min-h-screen bg-gradient-to-r from-blue-800 to-green-600 p-8 flex justify-center pt-10 md:pt-20">
-
-
-
-        <div className="w-full max-w-3xl bg-white/10 backdrop-blur-md rounded-xl shadow-xl p-8 text-white">
-          <h1 className="text-3xl font-bold mb-8 text-center">
-            Upload de Notas Fiscais
-          </h1>
-
-          {/* Selects */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <select
-              onChange={(e) => {
-                const selected = transportadoras.find(t => t.id === parseInt(e.target.value));
-                setTransportadoraSelecionada(selected);
-              }}
-              className="p-3 rounded text-black"
-              defaultValue=""
-            >
-              <option value="" disabled>Selecione a Transportadora</option>
-              {transportadoras.map((t) => (
-                <option key={t.id} value={t.id}>{t.nome}</option>
-              ))}
-            </select>
-
-            <select
-              onChange={(e) => setFazendaSelecionada(e.target.value)}
-              className="p-3 rounded text-black"
-              defaultValue=""
-            >
-              <option value="" disabled>Selecione a Fazenda</option>
-              {fazendas.map((f) => (
-                <option key={f.id} value={f.id}>{f.nome} ({f.estado})</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Upload */}
-          <div className="mb-6">
-            <label className="block mb-2 font-semibold">Selecionar PDF(s):</label>
-            <input
-              type="file"
-              multiple
-              accept="application/pdf"
-              onChange={handleSelecionarNotas}
-              className="block w-full text-black bg-white p-2 rounded"
-            />
-            <p className="mt-2 text-sm text-white/80">
-              {notas.length} arquivo(s) selecionado(s)
-            </p>
-          </div>
-
-          {/* Progresso */}
-          {enviando && (
-            <div className="mb-6">
-              <div className="text-yellow-300 font-semibold mb-2">
-                Enviando notas... ({progresso}/{totalNotas})
-              </div>
-              <div className="w-full bg-white/20 h-4 rounded overflow-hidden">
-                <div
-                  className="bg-yellow-400 h-full transition-all duration-300"
-                  style={{ width: `${(progresso / totalNotas) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
-
-          {/* Botão */}
-          <button
-            onClick={handleUpload}
-            disabled={enviando}
-            className={`mt-4 w-full py-3 rounded text-white font-bold transition ${
-              enviando
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-700"
-            }`}
+        {/* Selects */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <select
+            onChange={(e) => {
+              const selected = transportadoras.find(t => t.id === parseInt(e.target.value));
+              setTransportadoraSelecionada(selected);
+            }}
+            className="p-3 rounded text-black w-full"
+            defaultValue=""
           >
-            {enviando ? "Enviando..." : "📤 Enviar Arquivos"}
-          </button>
+            <option value="" disabled>Selecione a Transportadora</option>
+            {transportadoras.map((t) => (
+              <option key={t.id} value={t.id}>{t.nome}</option>
+            ))}
+          </select>
+
+          <select
+            onChange={(e) => setFazendaSelecionada(e.target.value)}
+            className="p-3 rounded text-black w-full"
+            defaultValue=""
+          >
+            <option value="" disabled>Selecione a Fazenda</option>
+            {fazendas.map((f) => (
+              <option key={f.id} value={f.id}>{f.nome} ({f.estado})</option>
+            ))}
+          </select>
         </div>
+
+        {/* Upload */}
+        <div className="mb-6">
+          <label className="block mb-2 font-semibold">Selecionar PDF(s):</label>
+          <input
+            type="file"
+            multiple
+            accept="application/pdf"
+            onChange={handleSelecionarNotas}
+            className="block w-full text-black bg-white p-2 rounded"
+          />
+          <p className="mt-2 text-sm text-white/80">
+            {notas.length} arquivo(s) selecionado(s)
+          </p>
+        </div>
+
+        {/* Progresso */}
+        {enviando && (
+          <div className="mb-6">
+            <div className="text-yellow-300 font-semibold mb-2">
+              Enviando notas... ({progresso}/{totalNotas})
+            </div>
+            <div className="w-full bg-white/20 h-4 rounded overflow-hidden">
+              <div
+                className="bg-yellow-400 h-full transition-all duration-300"
+                style={{ width: `${(progresso / totalNotas) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
+        {/* Botão */}
+        <button
+          onClick={handleUpload}
+          disabled={enviando}
+          className={`mt-4 w-full py-3 rounded text-white font-bold transition ${
+            enviando
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700"
+          }`}
+        >
+          {enviando ? "Enviando..." : "📤 Enviar Arquivos"}
+        </button>
       </div>
     </div>
-  );
+  </div>
+);
+
 
 };
 

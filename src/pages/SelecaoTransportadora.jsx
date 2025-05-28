@@ -95,80 +95,82 @@ const SelecaoTransportadora = () => {
     navigate("/home"); // fallback genérico
   };
   
-  return (
-    
-    <div
+return (
+  <div
+    className="min-h-screen w-full flex flex-col lg:flex-row"
+    style={{
+      background: "radial-gradient(closest-side, #82d9b6 0%, #1d2d6d 100%)",
+    }}
+  >
+    <GlobalHeader />
 
-      className="h-screen w-full flex"
-      style={{
-        background: "radial-gradient(closest-side, #82d9b6 0%, #1d2d6d 100%)",
-      }}
-    >
-      <GlobalHeader />
-
-      {/* Sidebar */}
-      <aside className={`w-[250px] bg-[#2c303b] p-6 text-white flex flex-col gap-6 transition-all duration-300 ${
+    {/* Sidebar */}
+    <aside
+      className={`w-full lg:w-[250px] bg-[#2c303b] p-6 text-white flex flex-col gap-4 lg:gap-6 transition-all duration-300 ${
         !isAdmin ? "opacity-30 pointer-events-none blur-sm" : ""
-      }`}>
-        <img src="/ellipse-10.png" className="w-[140px] mb-4" />
+      }`}
+    >
+      <img src="/ellipse-10.png" className="w-[120px] mx-auto mb-4" />
 
-        <p className="text-sm font-semibold">SISTEMA DE GESTÃO DE NFs</p>
+      <p className="text-sm font-semibold text-center lg:text-left">
+        SISTEMA DE GESTÃO DE NFs
+      </p>
 
+      <div className="flex flex-col gap-2">
         <button
           onClick={() => navigate("/home")}
-          className="bg-[#d9d9d9] text-black py-2 rounded font-bold transition-all duration-300 transform hover:scale-105 hover:bg-blue-400 active:scale-95 shadow-md hover:shadow-lg"
+          className="bg-[#d9d9d9] text-black py-2 rounded font-bold text-sm transition-all duration-300 transform hover:scale-105 hover:bg-blue-400 active:scale-95 shadow-md hover:shadow-lg"
         >
           PCP NOTAS
         </button>
         <button
           onClick={() => navigate("/painel-notas")}
-          className="bg-[#d9d9d9] text-black py-2 rounded font-bold transition-all duration-300 transform hover:scale-105 hover:bg-blue-400 active:scale-95 shadow-md hover:shadow-lg"
+          className="bg-[#d9d9d9] text-black py-2 rounded font-bold text-sm transition-all duration-300 transform hover:scale-105 hover:bg-blue-400 active:scale-95 shadow-md hover:shadow-lg"
         >
           PAINEL NOTAS
         </button>
         <button
           onClick={() => navigate("/notas-canceladas")}
-          className="bg-[#d9d9d9] text-black py-2 rounded font-bold transition-all duration-300 transform hover:scale-105 hover:bg-blue-400 active:scale-95 shadow-md hover:shadow-lg"
+          className="bg-[#d9d9d9] text-black py-2 rounded font-bold text-sm transition-all duration-300 transform hover:scale-105 hover:bg-blue-400 active:scale-95 shadow-md hover:shadow-lg"
         >
-          PAINEL DE NOTAS A CANCELAR
+          NOTAS A CANCELAR
         </button>
         <button
           onClick={() => navigate("/upload-notas")}
-          className="bg-[#d9d9d9] text-black py-2 rounded font-bold transition-all duration-300 transform hover:scale-105 hover:bg-blue-400 active:scale-95 shadow-md hover:shadow-lg"
+          className="bg-[#d9d9d9] text-black py-2 rounded font-bold text-sm transition-all duration-300 transform hover:scale-105 hover:bg-blue-400 active:scale-95 shadow-md hover:shadow-lg"
         >
           UPLOAD NOTAS
         </button>
-        
-      </aside>
+      </div>
+    </aside>
 
-      {/* Conteúdo */}
-      <main className="flex-1 p-12 flex flex-col items-center gap-6">
-        <div className="text-3xl font-black text-white tracking-wide mb-6">
-          SISTEMA DE GESTÃO DE NOTAS FISCAIS
-        </div>
+    {/* Conteúdo */}
+    <main className="flex-1 p-6 sm:p-8 md:p-12 flex flex-col items-center gap-6">
+      <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white text-center tracking-wide">
+        SISTEMA DE GESTÃO DE NOTAS FISCAIS
+      </h1>
 
-        <div className="grid grid-cols-4 gap-10">
-          {logos.map((logo) => (
-            <div
-              key={logo.id}
-              onClick={() => handleClick(logo.id)}
-              className={`w-[220px] h-[200px] rounded-[65px] overflow-hidden shadow-md cursor-pointer transition-all duration-300 transform ${
-                !podeAcessar(logo.id)
-                  ? "opacity-30 pointer-events-none blur-[1px]"
-                  : "bg-white hover:scale-105 hover:shadow-2xl active:scale-95"
-              }`}
-            >
-              <img
-                src={logo.src}
-                alt={logo.nome}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ))}
-        </div>
-      </main>
-    </div>
-  );
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 sm:gap-8">
+        {logos.map((logo) => (
+          <div
+            key={logo.id}
+            onClick={() => handleClick(logo.id)}
+            className={`w-full aspect-[1/1] max-w-[180px] sm:max-w-[200px] md:max-w-[220px] rounded-[35px] overflow-hidden shadow-md cursor-pointer transition-all duration-300 transform ${
+              !podeAcessar(logo.id)
+                ? "opacity-30 pointer-events-none blur-[1px]"
+                : "bg-white hover:scale-105 hover:shadow-2xl active:scale-95"
+            }`}
+          >
+            <img
+              src={logo.src}
+              alt={logo.nome}
+              className="w-full h-full object-contain"
+            />
+          </div>
+        ))}
+      </div>
+    </main>
+  </div>
+);
 };
-
 export default SelecaoTransportadora;
