@@ -12,6 +12,11 @@ import PainelNotas from "./pages/PainelNotas"; // 👈 AQUI adiciona certinho!
 import PainelCargoPolo from "./pages/PainelCargoPolo";
 import NotasCanceladas from "./pages/NotasCanceladas";
 import PainelGarbuio from "./pages/PainelGarbuio";
+import PainelVDA from "./pages/painelVDA";
+import PainelJSL from "./pages/PainelJSL";
+import PainelTransOlsen from "./pages/PainelTransOlsen";
+import PainelPlacidos from "./pages/PainelPlacidos";
+import PainelSerranalog from "./pages/PainelSerranalog";
 
 function App() {
   return (
@@ -84,6 +89,41 @@ function App() {
           <Route path="/painel-transportadora/3" element={
             <ProtectedRoute role="transportadora">
               <PainelNepomuceno />
+            </ProtectedRoute>
+          } />
+
+          {/* Painel Transportadora VDA */}
+          <Route path="/painel-transportadora/8" element={
+            <ProtectedRoute role="transportadora">
+              <PainelVDA />
+            </ProtectedRoute>
+          } />
+
+          {/* Painel Transportadora JSL */}
+          <Route path="/painel-transportadora/5" element={
+            <ProtectedRoute role="transportadora">
+              <PainelJSL />
+            </ProtectedRoute>
+          } />
+
+          {/* Painel Transportadora Trans Olsen */}
+          <Route path="/painel-transportadora/4" element={
+            <ProtectedRoute role="transportadora">
+              <PainelTransOlsen />
+            </ProtectedRoute>
+          } />
+
+          {/* Painel Transportadora Plácidos */}
+          <Route path="/painel-transportadora/6" element={
+            <ProtectedRoute role="transportadora">
+              <PainelPlacidos />
+            </ProtectedRoute>
+          } />
+
+          {/* Painel Transportadora Serranalog */}
+          <Route path="/painel-transportadora/7" element={
+            <ProtectedRoute role="transportadora">
+              <PainelSerranalog />
             </ProtectedRoute>
           } />
           

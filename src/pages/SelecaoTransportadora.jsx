@@ -82,13 +82,38 @@ const SelecaoTransportadora = () => {
       return;
     }
   
+    if (id === 2) {
+      navigate("/painel-transportadora/2");
+      return;
+    }
+
     if (id === 3) {
       navigate("/painel-transportadora/3");
       return;
     }
 
-        if (id === 2) {
-      navigate("/painel-transportadora/2");
+    if (id === 4) {
+      navigate("/painel-transportadora/4");
+      return;
+    }
+
+    if (id === 5) {
+      navigate("/painel-transportadora/5");
+      return;
+    }
+
+    if (id === 6) {
+      navigate("/painel-transportadora/6");
+      return;
+    }
+
+    if (id === 7) {
+      navigate("/painel-transportadora/7");
+      return;
+    }
+
+    if (id === 8) {
+      navigate("/painel-transportadora/8");
       return;
     }
   

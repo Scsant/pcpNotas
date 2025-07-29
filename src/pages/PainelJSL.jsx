@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import ModalSolicitarNota from "../components/ModalSolicitarNota";
 import { FaFilter, FaDownload, FaTrash, FaEye, FaCheckCircle, FaClock, FaExclamationTriangle } from "react-icons/fa";
 
-const PainelNepomuceno = () => {
+const PainelJSL = () => {
   const [notas, setNotas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notasSelecionadas, setNotasSelecionadas] = useState([]);
@@ -53,7 +53,7 @@ const PainelNepomuceno = () => {
       const { data, error } = await supabase
         .from("documentos_notas")
         .select("*")
-        .eq("transportadora_nome", "EXPRESSO NEPOMUCENO S/A")
+        .eq("transportadora_nome", "JSL S.A.-MS")
         .not("status", "eq", "cancelado")
         .order("data_envio", { ascending: false });
 
@@ -254,8 +254,8 @@ const PainelNepomuceno = () => {
   return (
     <div className="min-h-screen bg-gradient-to-r from-[#0070C0] to-[#00B050] text-white p-6">
       <PainelHeader
-        logo="/rectangle-80.png"
-        title="Notas Fiscais - Nepomuceno"
+        logo="/rectangle-100.png"
+        title="Notas Fiscais - JSL"
         onSolicitar={() => setMostrarModal(true)}
       />
 
@@ -609,4 +609,4 @@ const PainelNepomuceno = () => {
   );
 };
 
-export default PainelNepomuceno;
+export default PainelJSL; 
