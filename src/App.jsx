@@ -12,7 +12,7 @@ import PainelNotas from "./pages/PainelNotas"; // 👈 AQUI adiciona certinho!
 import PainelCargoPolo from "./pages/PainelCargoPolo";
 import NotasCanceladas from "./pages/NotasCanceladas";
 import PainelGarbuio from "./pages/PainelGarbuio";
-import PainelVDA from "./pages/painelVDA";
+import PainelVDA from "./pages/PainelVDA";
 import PainelJSL from "./pages/PainelJSL";
 import PainelTransOlsen from "./pages/PainelTransOlsen";
 import PainelPlacidos from "./pages/PainelPlacidos";
