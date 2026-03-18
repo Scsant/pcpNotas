@@ -1,5 +1,16 @@
 import { useState } from "react";
+import { HiOutlineArrowDownTray, HiOutlineEye, HiOutlineLockClosed } from "react-icons/hi2";
 import { supabase } from "../supabaseClient";
+
+const inputClassName = "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none";
+
+const statusClassName = {
+  pendente: "bg-amber-100 text-amber-800",
+  vinculada: "bg-emerald-100 text-emerald-800",
+  em_transito: "bg-sky-100 text-sky-800",
+  concluido: "bg-slate-200 text-slate-700",
+  cancelado: "bg-rose-100 text-rose-700",
+};
 
 const NotaLinha = ({ nota, podeEditar, salvarEdicao, selecionada, toggleSelecionada }) => {
   const [edicao, setEdicao] = useState({
@@ -10,122 +21,123 @@ const NotaLinha = ({ nota, podeEditar, salvarEdicao, selecionada, toggleSelecion
   });
 
   const baixarPDF = async (url, nomeArquivo) => {
-    const { data, error } = await supabase.storage.from("notas").download(url);
-    if (error) {
-      console.error("Erro ao baixar PDF:", error.message);
-      return;
-    }
+    try {
+      const { data, error } = await supabase.storage.from("notas").download(url);
+      if (error) {
+        console.error("Erro ao baixar PDF:", error.message);
+        return;
+      }
 
-    const blobUrl = window.URL.createObjectURL(data);
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = nomeArquivo || "nota.pdf";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(blobUrl);
+      const blobUrl = window.URL.createObjectURL(data);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = nomeArquivo || "nota.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error("Erro no download:", err);
+    }
   };
 
+  const publicUrl = supabase.storage.from("notas").getPublicUrl(nota.url).data?.publicUrl || "";
+  const statusKey = nota.status?.toLowerCase().trim() || "pendente";
+
   return (
-    <tr className={`text-center border-b hover:bg-gray-100 ${selecionada ? "bg-green-100" : ""}`}>
-      {/* Seleção */}
-      <td className="px-2 py-2">
-        <input
-          type="checkbox"
-          checked={selecionada}
-          onChange={() => toggleSelecionada(nota.id)}
-        />
+    <tr className={`border-b border-slate-100 align-top transition hover:bg-slate-50 ${selecionada ? "bg-emerald-50" : ""}`}>
+      <td className="px-3 py-4 text-center">
+        <input type="checkbox" checked={selecionada} onChange={() => toggleSelecionada(nota.id)} />
       </td>
 
-      {/* Dados básicos */}
-      <td className="px-3 py-2 text-gray-800">{nota.numero_nf}</td>
-      <td className="px-3 py-2 text-gray-800">{nota.nome_arquivo}</td>
-      <td className="px-3 py-2 text-gray-800">{nota.transportadora_nome}</td>
-      <td className="px-3 py-2 text-gray-800">{nota.fazenda}</td>
-      <td className="px-3 py-2 text-gray-800">{nota.estado}</td>
+      <td className="px-3 py-4 font-semibold text-slate-800">{nota.numero_nf}</td>
+      <td className="px-3 py-4 text-slate-700">{nota.nome_arquivo}</td>
+      <td className="px-3 py-4 text-slate-700">{nota.transportadora_nome}</td>
+      <td className="px-3 py-4 text-slate-700">{nota.fazenda}</td>
+      <td className="px-3 py-4 text-slate-700">{nota.estado}</td>
 
-      {/* CTE */}
-      <td className="px-2 py-2">
+      <td className="px-3 py-4">
         {podeEditar ? (
           <input
             value={edicao.cte}
             onChange={(e) => setEdicao((prev) => ({ ...prev, cte: e.target.value }))}
-            className="border border-gray-300 rounded px-2 py-1 w-full text-sm text-black"
+            className={inputClassName}
           />
-        ) : nota.cte}
+        ) : (
+          <span className="text-slate-700">{nota.cte}</span>
+        )}
       </td>
 
-      {/* Placa */}
-      <td className="px-2 py-2">
+      <td className="px-3 py-4">
         {podeEditar ? (
           <input
             value={edicao.placa}
-            onChange={(e) =>
-              setEdicao((prev) => ({ ...prev, placa: e.target.value.toUpperCase() }))
-            }
-            className="border border-gray-300 rounded px-2 py-1 w-full text-sm text-black"
+            onChange={(e) => setEdicao((prev) => ({ ...prev, placa: e.target.value.toUpperCase() }))}
+            className={inputClassName}
           />
-        ) : nota.placa}
+        ) : (
+          <span className="text-slate-700">{nota.placa}</span>
+        )}
       </td>
 
-      {/* Observação */}
-      <td className="px-2 py-2">
+      <td className="px-3 py-4">
         {podeEditar ? (
           <input
             value={edicao.observacao}
             onChange={(e) => setEdicao((prev) => ({ ...prev, observacao: e.target.value }))}
-            className="border border-gray-300 rounded px-2 py-1 w-full text-sm text-black"
+            className={inputClassName}
           />
-        ) : nota.observacao}
+        ) : (
+          <span className="text-slate-700">{nota.observacao}</span>
+        )}
       </td>
 
-      {/* Data */}
-      <td className="px-2 py-2 text-gray-800">
-        {new Date(nota.data_envio).toLocaleDateString("pt-BR")}
+      <td className="px-3 py-4 text-slate-700">{new Date(nota.data_envio).toLocaleDateString("pt-BR")}</td>
+
+      <td className="px-3 py-4">
+        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${statusClassName[statusKey] || "bg-slate-100 text-slate-700"}`}>
+          {nota.status}
+        </span>
       </td>
 
-      {/* Status */}
-      <td className="px-2 py-2">
-        <span className="capitalize text-gray-800 font-semibold">{nota.status}</span>
-      </td>
-
-      {/* PDF */}
-      <td className="px-2 py-2">
-        <div className="flex flex-col items-center gap-1">
+      <td className="px-3 py-4">
+        <div className="flex min-w-[140px] flex-col items-start gap-2">
           <a
-            href={`https://prbmfjfgzjoqhfeefgxp.supabase.co/storage/v1/object/public/${nota.url}`}
+            href={publicUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 font-medium text-sm transition"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#1f5f95] transition hover:text-[#123b68]"
             title="Visualizar PDF"
           >
-            📄 Ver PDF
+            <HiOutlineEye />
+            Ver PDF
           </a>
 
-          {nota.status?.toLowerCase().trim() === "vinculada" ? (
+          {statusKey === "vinculada" ? (
             <button
               type="button"
               onClick={() => baixarPDF(nota.url, nota.nome_arquivo)}
-              className="text-green-600 hover:text-green-800 underline text-sm transition"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 transition hover:text-emerald-900"
               title="Baixar PDF"
             >
-              📥 Baixar PDF
+              <HiOutlineArrowDownTray />
+              Baixar PDF
             </button>
           ) : (
-            <span className="text-gray-400 italic text-xs" title="PDF indisponível">
-              ⛔ Indisponível
+            <span className="inline-flex items-center gap-2 text-xs font-medium text-slate-400" title="PDF indisponível">
+              <HiOutlineLockClosed />
+              Indisponível
             </span>
           )}
         </div>
       </td>
 
-      {/* Salvar */}
-      <td className="px-2 py-2">
+      <td className="px-3 py-4">
         {podeEditar && (
           <button
             type="button"
             onClick={() => salvarEdicao(nota.id, edicao)}
-            className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded shadow"
+            className="rounded-xl bg-[#123b68] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#0f3259]"
             title="Salvar alterações"
           >
             Salvar

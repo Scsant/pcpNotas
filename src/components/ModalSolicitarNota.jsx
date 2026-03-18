@@ -1,155 +1,212 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
+import { supabase } from "../supabaseClient";
+import { getTransportadoraConfig, transportadorasConfig } from "../lib/transportadoras";
+import { formatSequenceNumber, getNextSequentialNumber } from "../lib/lotes";
 
+const TIPO_PEDIDO_PADRAO = "normal";
 
-
-
-
-const ModalSolicitarNota = ({ transportadoraId, onClose }) => {
+const ModalSolicitarNota = ({ defaultTransportadoraId = null, perfil = null, onClose, onSuccess }) => {
   const [form, setForm] = useState({
-    tipo_pedido: "",
     quantidade_nfs: "",
     observacao: "",
   });
-
   const [fazendaSelecionada, setFazendaSelecionada] = useState("");
+  const [transportadoraSelecionada, setTransportadoraSelecionada] = useState(defaultTransportadoraId || "");
   const [fazendas, setFazendas] = useState([]);
-  const [perfil, setPerfil] = useState(null);
-  const session = supabase.auth.getSession();
-  const user = session?.data?.session?.user;
+  const [perfilAtual, setPerfilAtual] = useState(perfil);
+  const [salvando, setSalvando] = useState(false);
+
+  const isAdmin = (perfilAtual?.role || perfil?.role) === "admin";
+  const transportadoraFixa = defaultTransportadoraId || (!isAdmin ? perfilAtual?.transportadora_id : null);
+  const transportadoraResolvida = transportadoraFixa || transportadoraSelecionada;
 
   useEffect(() => {
     const carregarFazendas = async () => {
-      const { data, error } = await supabase.from("fazendas").select("*");
-      if (!error) setFazendas(data);
-      else console.error("Erro ao buscar fazendas:", error);
-    };
-
-    const perfilStorage = JSON.parse(localStorage.getItem("perfil"));
-    setPerfil(perfilStorage);
-
-    carregarFazendas();
-  }, []);
-  
-  useEffect(() => {
-    const getUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
+      const { data, error } = await supabase.from("fazendas").select("*").order("nome");
       if (error) {
-        console.error("Erro ao obter usuário:", error);
+        console.error(error);
+        toast.error("Erro ao carregar fazendas.");
       } else {
-        setPerfil((prev) => ({ ...prev, id: data.user.id }));
+        setFazendas(data || []);
       }
     };
 
-    getUser();
-  }, []);
+    const carregarPerfil = async () => {
+      if (perfil) {
+        setPerfilAtual(perfil);
+        return;
+      }
+
+      const perfilStorage = JSON.parse(localStorage.getItem("perfil") || "null");
+      if (perfilStorage) {
+        setPerfilAtual(perfilStorage);
+      }
+
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        setPerfilAtual((prev) => ({
+          ...(prev || {}),
+          id: data.user.id,
+          user_id: data.user.id,
+        }));
+      }
+    };
+
+    carregarFazendas();
+    carregarPerfil();
+  }, [perfil]);
+
+  const transportadoraAtual = useMemo(
+    () => getTransportadoraConfig(transportadoraResolvida),
+    [transportadoraResolvida]
+  );
 
   const handleSubmit = async () => {
-    if (!form.tipo_pedido || !form.quantidade_nfs || !fazendaSelecionada) {
-      toast.error("Preencha todos os campos obrigatórios!");
+    if (!transportadoraResolvida || !form.quantidade_nfs || !fazendaSelecionada) {
+      toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
 
-    const { error } = await supabase.from("pedidos_notas").insert([
-      {
-        transportadora_id: transportadoraId,
-        fazenda_id: parseInt(fazendaSelecionada),
-        user_id: perfil?.id,
-        quantidade_nfs: form.quantidade_nfs,
-        tipo_pedido: form.tipo_pedido,
-        observacao: form.observacao,
-      },
-    ]);
+    setSalvando(true);
 
-    if (error) {
-      toast.error("Erro ao solicitar nota.");
-      console.error(error);
-    } else {
-      toast.success("Solicitação enviada com sucesso!");
+    try {
+      const numeroPedido = await getNextSequentialNumber("pedidos_notas", Number(transportadoraResolvida), "numero_pedido");
+
+      const payload = {
+        transportadora_id: Number(transportadoraResolvida),
+        fazenda_id: Number(fazendaSelecionada),
+        user_id: perfilAtual?.user_id || perfilAtual?.id || null,
+        quantidade_nfs: Number(form.quantidade_nfs),
+        tipo_pedido: TIPO_PEDIDO_PADRAO,
+        observacao: form.observacao,
+        status: "pendente",
+        numero_pedido: numeroPedido,
+        atualizado_em: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from("pedidos_notas").insert([payload]);
+
+      if (error) {
+        console.error(error);
+        toast.error("Erro ao solicitar nota.");
+        setSalvando(false);
+        return;
+      }
+
+      toast.success(`Solicitação enviada com sucesso. Pedido ${formatSequenceNumber(numeroPedido)}.`);
+      setSalvando(false);
+      onSuccess?.();
       onClose();
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao gerar o número do pedido.");
+      setSalvando(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-white text-black p-6 rounded shadow-lg w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">Solicitar Nota Fiscal</h2>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-2 sm:p-4">
+      <div className="glass-panel flex max-h-[calc(100vh-1rem)] w-full max-w-lg flex-col overflow-hidden rounded-[24px] sm:max-h-[calc(100vh-2rem)] sm:rounded-[28px]">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200/70 px-4 py-4 sm:px-5 sm:py-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Novo pedido</p>
+            <h2 className="section-title mt-2 text-2xl font-black">Solicitar notas</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Registre a quantidade necessária para o dia e deixe a demanda rastreável para o atendimento do PCP.
+            </p>
+          </div>
 
-        {/* Tipo de Pedido */}
-        <div className="mb-4">
-          <label className="block mb-1 font-medium">Tipo de Pedido</label>
-          <select
-            className="w-full p-2 border rounded"
-            value={form.tipo_pedido}
-            onChange={(e) =>
-              setForm({ ...form, tipo_pedido: e.target.value })
-            }
-          >
-            <option value="">Selecione</option>
-            <option value="normal">Normal</option>
-            <option value="reentrega">Reentrega</option>
-            <option value="complementar">Complementar</option>
-          </select>
-        </div>
-
-        {/* Fazenda */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Fazenda</label>
-          <select
-            value={fazendaSelecionada}
-            onChange={(e) => setFazendaSelecionada(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
-          >
-            <option value="">Selecione a fazenda</option>
-            {fazendas.map((fazenda) => (
-              <option key={fazenda.id} value={fazenda.id}>
-                {fazenda.nome} ({fazenda.estado})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Quantidade */}
-        <div className="mb-4">
-          <label className="block mb-1 font-medium">Quantidade de NFs</label>
-          <input
-            type="number"
-            className="w-full p-2 border rounded"
-            value={form.quantidade_nfs}
-            onChange={(e) =>
-              setForm({ ...form, quantidade_nfs: e.target.value })
-            }
-          />
-        </div>
-
-        {/* Observação */}
-        <div className="mb-4">
-          <label className="block mb-1 font-medium">Observação</label>
-          <textarea
-            className="w-full p-2 border rounded"
-            rows={3}
-            value={form.observacao}
-            onChange={(e) =>
-              setForm({ ...form, observacao: e.target.value })
-            }
-          />
-        </div>
-
-        {/* Ações */}
-        <div className="flex justify-end gap-3">
           <button
-            className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+            type="button"
             onClick={onClose}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
           >
-            Cancelar
+            Fechar
           </button>
-          <button
-            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-            onClick={handleSubmit}
-          >
-            Solicitar
-          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5">
+          <div className="grid gap-4">
+            {!transportadoraFixa && (
+              <label className="space-y-2">
+                <span className="text-sm font-semibold text-slate-600">Transportadora</span>
+                <select
+                  value={transportadoraSelecionada}
+                  onChange={(e) => setTransportadoraSelecionada(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none"
+                >
+                  <option value="">Selecione a transportadora</option>
+                  {transportadorasConfig.map((transportadora) => (
+                    <option key={transportadora.id} value={transportadora.id}>
+                      {transportadora.nome}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {transportadoraAtual && (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                Pedido vinculado à transportadora <strong>{transportadoraAtual.nome}</strong>.
+              </div>
+            )}
+
+            <label className="space-y-2">
+              <span className="text-sm font-semibold text-slate-600">Fazenda</span>
+              <select
+                value={fazendaSelecionada}
+                onChange={(e) => setFazendaSelecionada(e.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none"
+              >
+                <option value="">Selecione a fazenda</option>
+                {fazendas.map((fazenda) => (
+                  <option key={fazenda.id} value={fazenda.id}>
+                    {fazenda.nome} ({fazenda.estado})
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-sm font-semibold text-slate-600">Quantidade de NFs</span>
+              <input
+                type="number"
+                min="1"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none"
+                value={form.quantidade_nfs}
+                onChange={(e) => setForm((prev) => ({ ...prev, quantidade_nfs: e.target.value }))}
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-sm font-semibold text-slate-600">Observação</span>
+              <textarea
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none"
+                rows={3}
+                value={form.observacao}
+                onChange={(e) => setForm((prev) => ({ ...prev, observacao: e.target.value }))}
+              />
+            </label>
+          </div>
+
+          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700"
+              onClick={onClose}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="rounded-2xl bg-[#123b68] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#0f3259] disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleSubmit}
+              disabled={salvando}
+            >
+              {salvando ? "Solicitando..." : "Solicitar"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

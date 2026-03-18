@@ -63,3 +63,27 @@ Bracell – PCP Interno
 Com amor e dedicação pelo time de analistas e devs 💼👨‍💻
 
 "O que antes era anotado no caderno, agora é gerenciado com estilo e agilidade!"
+
+---
+
+## 🛡️ Configurar variáveis de ambiente (Supabase)
+
+Para não expor chaves no repositório, o projeto usa variáveis de ambiente no Vite.
+
+Crie um arquivo `.env` na raiz do projeto com o conteúdo:
+
+```
+VITE_SUPABASE_URL=https://<seu-projeto>.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...SEU_ANON_KEY...xyz
+```
+
+Substitua os valores pelos da sua instância Supabase. Reinicie o servidor de desenvolvimento após adicionar o arquivo.
+
+### Rodando em desenvolvimento
+
+```powershell
+npm install
+npm run dev
+```
+
+Isso iniciará o Vite em modo dev e permitirá que a aplicação use as variáveis `import.meta.env.VITE_SUPABASE_*`.

@@ -1,9 +1,117 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
-/* ✅ Remove setas de incremento de inputs tipo number */
+
+:root {
+  color-scheme: light;
+  --brand-navy: #123b68;
+  --brand-ocean: #1f5f95;
+  --brand-green: #3b8f59;
+  --brand-mint: #cfe8d1;
+  --brand-cream: #f6f7f2;
+  --brand-ink: #10233b;
+  --brand-muted: #5d6b7a;
+  --brand-line: rgba(16, 35, 59, 0.12);
+  --brand-card: rgba(255, 255, 255, 0.86);
+  --shadow-soft: 0 24px 60px rgba(16, 35, 59, 0.18);
+}
+
+html {
+  background:
+    radial-gradient(circle at top left, rgba(90, 166, 125, 0.28), transparent 28%),
+    radial-gradient(circle at right 20%, rgba(31, 95, 149, 0.3), transparent 24%),
+    linear-gradient(135deg, #eef5f0 0%, #e5eef7 45%, #f6f7f2 100%);
+}
+
+body {
+  min-height: 100vh;
+  color: var(--brand-ink);
+  background: transparent;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+::selection {
+  background: rgba(31, 95, 149, 0.18);
+}
+
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.app-shell::before,
+.app-shell::after {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 999px;
+  filter: blur(8px);
+}
+
+.app-shell::before {
+  top: -12rem;
+  left: -10rem;
+  width: 28rem;
+  height: 28rem;
+  background: rgba(59, 143, 89, 0.18);
+}
+
+.app-shell::after {
+  right: -10rem;
+  bottom: -10rem;
+  width: 32rem;
+  height: 32rem;
+  background: rgba(18, 59, 104, 0.14);
+}
+
+.app-content {
+  position: relative;
+  z-index: 1;
+}
+
+.glass-panel {
+  background: var(--brand-card);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: var(--shadow-soft);
+}
+
+.section-title {
+  color: var(--brand-navy);
+  letter-spacing: -0.02em;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.55s ease-out both;
 }

@@ -77,14 +77,19 @@ const VisualizarNotas = () => {
                 <tr key={nota.id} className="border-t">
                   <td className="px-4 py-2">{nota.nome_arquivo}</td>
                   <td className="px-4 py-2">
-                    <a
-                      href={`https://prbmfjfgzjqohfeefgxp.supabase.co/storage/v1/object/public/${nota.url}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      Abrir PDF
-                    </a>
+                    {(() => {
+                      const publicUrl = supabase.storage.from('notas').getPublicUrl(nota.url).data?.publicUrl || '';
+                      return (
+                        <a
+                          href={publicUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          Abrir PDF
+                        </a>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-2">
                     {/* Opcional: botar um botão de deletar se quiser */}
